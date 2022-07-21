@@ -79,8 +79,9 @@ def TagGenerator(S3Bucket, ObjectName):
     print(response)
     hashtags = ''
     for i in range(len(response['Labels'])):
-        hashtags += '#' + response['Labels'][i]['Name']
-    hashtags = hashtags.replace(' ', '')
+        
+        hashtags += ' ' + '#' + response['Labels'][i]['Name'].replace(' ', '')
+    #hashtags = hashtags.replace(' ', '')
     return hashtags
 
     
