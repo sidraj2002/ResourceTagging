@@ -11,22 +11,27 @@ my_config = Config(
         'mode': 'standard'
     }
 )
+bucket_name = 'tagsbucket2'
 
 def lambda_handler(event, context):
     # TODO implement
     #event['TagId']
-    
-    print(event)
+    s3 = boto3.resource('s3')
     dynamodb = boto3.resource('dynamodb', config=my_config)
+    
+    location = boto3.client('s3').get_bucket_location(Bucket='tagsbucket2')['LocationConstraint']
+    
 
     table = dynamodb.Table('TagsManager')
     event = json.loads(event['body'])
     response = table.scan(FilterExpression=Attr('TagId').contains(event['TagId']))
     data = ''
     for i in range(len(response['Items'])):
-        data += response['Items'][i]['ImageId'] + ',' 
+
+        data += "https://s3.amazonaws.com/%s/%s" % (bucket_name, response['Items'][i]['ImageId']) + ',' + ' '
     #data = response['Items'][0]
     print(data)
+    
 
     #while 'LastEvaluatedKey' in response:
     #    response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
@@ -40,5 +45,4 @@ def lambda_handler(event, context):
         "isBase64Encoded": False,
         "headers": {'Content-Type': 'application/json'}
     }
-    
     
