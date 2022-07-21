@@ -96,7 +96,10 @@ for files in os.listdir(myPath):
         image.imageId = ImgIdGenerator() + files
         S3Uploader(f, 'tagsbucket2', image.imageId)
         hashtags = TagGenerator('tagsbucket2', image.imageId)
-        item = {'ImageId':image.imageId, 'TagId':hashtags, 'metadata':image.metadata}
+        if hashtags == None or hashtags == '':
+            item = {'ImageId':image.imageId, 'TagId':'#', 'metadata':image.metadata}
+        else:
+            item = {'ImageId':image.imageId, 'TagId':hashtags, 'metadata':image.metadata}
         #print(item)
         DynamoUpdate('TagsManager', item)
 #image = MyImg()
