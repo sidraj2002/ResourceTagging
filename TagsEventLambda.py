@@ -22,7 +22,10 @@ def lambda_handler(event, context):
     table = dynamodb.Table('TagsManager')
     event = json.loads(event['body'])
     response = table.scan(FilterExpression=Attr('TagId').contains(event['TagId']))
-    data = response['Items']
+    data = ''
+    for i in range(len(response['Items'])):
+        data += response['Items'][i]['ImageId'] + ',' 
+    #data = response['Items'][0]
     print(data)
 
     #while 'LastEvaluatedKey' in response:
