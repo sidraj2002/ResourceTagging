@@ -21,7 +21,7 @@ my_config = Config(
 
 class MyImg:
     imageId = None
-    def __init__(self, imageId):
+    def __init__(self):
         self.imageId = ''
         self.timestamp = datetime.datetime.now()
         self.userId = ''
@@ -41,7 +41,7 @@ class MyImg:
             "Frames in Image": getattr(image, "n_frames", 1)
             }
         self.metadata = info_dict
-        print(self.metadata)
+        #print(self.metadata)
 
 def ImgIdGenerator():
     return secrets.token_hex(10)
@@ -74,20 +74,38 @@ def TagGenerator(S3Bucket, ObjectName):
         },
     },
     MaxLabels=123,
-    MinConfidence=99,
+    MinConfidence=95,
     )
-    return response
+    print(response)
+    hashtags = ''
+    for i in range(len(response['Labels'])):
+        hashtags += '#' + response['Labels'][i]['Name']
+    hashtags = hashtags.replace(' ', '')
+    return hashtags
 
     
 
 ''' Main execution '''
+myPath = '/home/ec2-user/environment//Tags/ResourceTagging/Images'
 
-image = MyImg("firstImage")
-image.CreateImg("/home/ec2-user/environment/Tags/ResourceTagging/dog.jpg")
-image.imageId = ImgIdGenerator() + 'dog.jpg'
+for files in os.listdir(myPath):
+    f = os.path.join(myPath, files)
+    if os.path.isfile(f):
+        image = MyImg()
+        image.CreateImg(f)
+        image.imageId = ImgIdGenerator() + files
+        S3Uploader(f, 'tagsbucket2', image.imageId)
+        hashtags = TagGenerator('tagsbucket2', image.imageId)
+        item = {'ImageId':image.imageId, 'TagId':hashtags, 'metadata':image.metadata}
+        #print(item)
+        DynamoUpdate('TagsManager', item)
+#image = MyImg()
+#image.CreateImg("/home/ec2-user/environment/Tags/ResourceTagging/dog.jpg")
+#image.imageId = ImgIdGenerator() + 'dog.jpg'
 
-S3Uploader("/home/ec2-user/environment/Tags/ResourceTagging/dog.jpg", "tagsbucket2", image.imageId)
-RekognitionResponse = TagGenerator('tagsbucket2',image.imageId)
-print(RekognitionResponse)
-item = {'ImageId':image.imageId, 'TagId':'#dog', 'metadata':image.metadata}
-DynamoUpdate('TagsManager', item)
+#S3Uploader("/home/ec2-user/environment/Tags/ResourceTagging/dog.jpg", "tagsbucket2", image.imageId)
+#RekognitionResponse = TagGenerator('tagsbucket2',image.imageId)
+#print(RekognitionResponse)
+
+#item = {'ImageId':image.imageId, 'TagId':RekognitionResponse, 'metadata':image.metadata}
+#DynamoUpdate('TagsManager', item)
